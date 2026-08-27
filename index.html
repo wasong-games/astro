@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Astro AI - 영혼의 수호 동물과 라이프 차트</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- 폰트 -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700;900&display=swap" rel="stylesheet">
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background-color: #F8F5EE;
+      color: #2D312E;
+    }
+    .font-serif-kr {
+      font-family: 'Noto Serif KR', serif;
+    }
+    /* 모바일 브라우저 기본 인풋 스타일 리셋 (깨짐 방지) */
+    input[type="date"], input[type="time"], input[type="text"] {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      min-height: 48px;
+      line-height: normal;
+    }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="min-h-screen flex justify-center items-start sm:py-8 sm:px-4">
+
+  <!-- 모바일 중심 컨테이너 -->
+  <div class="w-full max-w-[440px] bg-[#F8F5EE] min-h-screen sm:min-h-0 sm:rounded-[36px] sm:shadow-2xl sm:border sm:border-[#E8E2D2] p-5 space-y-5 pb-20">
+
+    <!-- 상단 앤티크 브레드크럼 -->
+    <div class="text-center pt-2">
+      <p class="text-[11px] tracking-[0.25em] text-[#8C826F] font-serif-kr uppercase">
+        Western Astrology Archive · 2026
+      </p>
+    </div>
+
+    <!-- 1. 입력 카드 -->
+    <div id="inputCard" class="bg-[#FFFFFF] border border-[#EBE5D8] rounded-[28px] p-6 shadow-sm space-y-4 text-center">
+      <div class="w-16 h-16 bg-[#EBF3ED] text-[#1E3E2B] rounded-full flex items-center justify-center mx-auto text-2xl shadow-inner border border-[#D5E4D8]">
+        🔮
+      </div>
+      <div class="space-y-1">
+        <h1 class="font-serif-kr text-xl font-bold text-[#1E3E2B] tracking-tight">
+          내 타고난 수호 본능과 100세 운명
+        </h1>
+        <p class="text-xs text-[#7A7261] leading-relaxed">
+          생년월일시를 입력하면 당신만의 영혼 심볼과<br>생애 황금기, 정밀 궁합을 풀어드립니다.
+        </p>
+      </div>
+
+      <div class="space-y-3 pt-2 text-left">
+        <div>
+          <label class="text-[11px] font-bold text-[#8C826F] ml-1 block mb-1">생년월일</label>
+          <input type="date" id="birthDate" value="1989-04-11" class="w-full px-3.5 bg-[#FAF8F3] border border-[#E3DCCF] rounded-2xl text-xs text-[#2D312E] font-semibold focus:outline-none focus:border-[#1E3E2B]">
+        </div>
+        
+        <!-- 그리드 깨짐 방지: 2열 정밀 배치 -->
+        <div class="flex gap-2 w-full">
+          <div class="w-1/2 min-w-0">
+            <label class="text-[11px] font-bold text-[#8C826F] ml-1 block mb-1">태어난 시간</label>
+            <input type="time" id="birthTime" value="14:03" class="w-full px-3 bg-[#FAF8F3] border border-[#E3DCCF] rounded-2xl text-xs text-[#2D312E] font-semibold focus:outline-none focus:border-[#1E3E2B]">
+          </div>
+          <div class="w-1/2 min-w-0">
+            <label class="text-[11px] font-bold text-[#8C826F] ml-1 block mb-1">출생 도시</label>
+            <input type="text" id="birthCity" value="서울" placeholder="예: 서울" class="w-full px-3.5 bg-[#FAF8F3] border border-[#E3DCCF] rounded-2xl text-xs text-[#2D312E] font-semibold focus:outline-none focus:border-[#1E3E2B]">
+          </div>
+        </div>
+
+        <button onclick="analyzeChart()" class="w-full h-12 bg-[#1E3E2B] hover:bg-[#163021] active:scale-[0.98] text-[#F4EFE6] font-serif-kr font-bold text-sm rounded-2xl shadow-md transition duration-200 mt-2 flex items-center justify-center">
+          <span>내 영혼의 결과 확인하기</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 로딩 스피너 -->
+    <div id="loading" class="hidden text-center py-16 space-y-3">
+      <div class="w-9 h-9 border-3 border-[#1E3E2B] border-t-transparent rounded-full animate-spin mx-auto"></div>
+      <p class="font-serif-kr text-xs text-[#8C826F] tracking-wide">별들의 궤적을 읽어내는 중입니다...</p>
+    </div>
+
+    <!-- 2. 결과 리포트 섹션 -->
+    <div id="resultArea" class="hidden space-y-4 animate-fade-in">
+
+      <!-- 결과 메인 심볼 카드 -->
+      <div class="bg-[#FFFFFF] border border-[#EBE5D8] rounded-[28px] p-6 text-center space-y-4 shadow-sm relative overflow-hidden">
+        <p class="text-[11px] font-serif-kr tracking-[0.2em] text-[#8C826F]">당신은</p>
+        
+        <div class="w-36 h-36 mx-auto bg-gradient-to-b from-[#1E3E2B] to-[#12261A] rounded-2xl border-4 border-[#C8A97E] p-2 flex flex-col items-center justify-center shadow-lg relative">
+          <div class="absolute inset-1 border border-[#C8A97E]/40 rounded-xl pointer-events-none"></div>
+          <span id="animalEmoji" class="text-5xl drop-shadow-md">🦁</span>
+        </div>
+
+        <div class="space-y-1">
+          <div class="flex items-center justify-center gap-1.5 text-2xl font-serif-kr font-extrabold text-[#1E3E2B]">
+            <span id="animalName">황금빛 사자</span>
+          </div>
+          <p id="animalSubtitle" class="text-xs text-[#7A7261] font-medium">자신만의 무대에서 세상을 이끄는 사람</p>
+        </div>
+
+        <div class="pt-2">
+          <p class="text-[10px] tracking-[0.2em] text-[#A69C87] font-serif-kr uppercase" id="destinyCode">
+            DESTINY CODE · LEO · 1989
+          </p>
+        </div>
+
+        <button onclick="shareResult()" class="w-full py-3.5 bg-[#1E3E2B] hover:bg-[#152D1F] active:scale-[0.98] text-[#F8F5EE] font-serif-kr font-bold text-xs rounded-xl shadow transition duration-200">
+          내 결과 공유하기
+        </button>
+      </div>
+
+      <!-- 감성 한 줄 선언 카드 -->
+      <div class="bg-[#F0EBE0] border border-[#E3DCCF] rounded-[24px] p-5 space-y-2">
+        <h2 id="coreQuote" class="font-serif-kr text-base font-bold text-[#1E3E2B] leading-snug">
+          당신은 흔들리지 않는 뚝심으로 결국 증명해내는 사람이에요.
+        </h2>
+        <p class="text-[10px] text-[#8C826F] font-serif-kr tracking-wider" id="thaiSubtitle">
+          ราชสีห์ทองคำ · Golden Lion
+        </p>
+      </div>
+
+      <!-- 당신은 이런 사람입니다 -->
+      <div class="bg-[#FFFFFF] border border-[#EBE5D8] rounded-[24px] p-5 space-y-2 shadow-sm">
+        <h3 class="font-serif-kr text-xs font-bold text-[#1E3E2B] flex items-center gap-1.5">
+          <span>🌿</span> 당신은 이런 사람입니다
+        </h3>
+        <p id="descPersonality" class="text-xs text-[#524B3E] leading-relaxed"></p>
+      </div>
+
+      <!-- 카테고리별 등급 카드 -->
+      <div class="bg-[#FFFFFF] border border-[#EBE5D8] rounded-[24px] p-5 space-y-3 shadow-sm">
+        <div class="flex items-center justify-between">
+          <h3 class="font-serif-kr text-xs font-bold text-[#1E3E2B]">
+            타고난 5대 라이프 지수
+          </h3>
+          <span class="text-[10px] text-[#8C826F] font-serif-kr">S ~ F TIER</span>
+        </div>
+        <div id="ratingsContainer" class="space-y-2"></div>
+      </div>
+
+      <!-- 100세 운명 곡선 그래프 카드 -->
+      <div class="bg-[#FFFFFF] border border-[#EBE5D8] rounded-[24px] p-5 space-y-3 shadow-sm">
+        <div class="flex items-center justify-between">
+          <h3 class="font-serif-kr text-xs font-bold text-[#1E3E2B]">
+            생애 100세 황금기 곡선
+          </h3>
+          <span id="curveTag" class="text-[10px] px-2 py-0.5 bg-[#EBF3ED] text-[#1E3E2B] font-semibold rounded-md"></span>
+        </div>
+        <div class="h-48 w-full relative pt-1">
+          <canvas id="lifeChart"></canvas>
+        </div>
+        <p class="text-[10px] text-[#A69C87] text-center font-serif-kr">* 가장 높은 정점이 인생 최고의 전성기입니다.</p>
+      </div>
+
+      <!-- 현실 처방전 카드 -->
+      <div class="bg-[#FFFFFF] border border-[#EBE5D8] rounded-[24px] p-5 space-y-3 shadow-sm">
+        <h3 class="font-serif-kr text-xs font-bold text-[#1E3E2B] flex items-center gap-1.5">
+          <span>📜</span> 현실 처방전
+        </h3>
+        <div class="space-y-2.5 text-xs text-[#524B3E] leading-relaxed">
+          <div class="p-3 bg-[#FAF8F3] rounded-xl border border-[#EBE5D8]">
+            <span class="font-bold text-[#1E3E2B] block mb-0.5">💼 일과 성공 공식</span>
+            <span id="descCareer"></span>
+          </div>
+          <div class="p-3 bg-[#FAF8F3] rounded-xl border border-[#EBE5D8]">
+            <span class="font-bold text-[#1E3E2B] block mb-0.5">💰 돈 버는 팔자</span>
+            <span id="descWealth"></span>
+          </div>
+          <div class="p-3 bg-[#FAF8F3] rounded-xl border border-[#EBE5D8]">
+            <span class="font-bold text-[#1E3E2B] block mb-0.5">💘 평생 갈 인연의 특징</span>
+            <span id="descLove"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 남녀 궁합 섹션 -->
+      <div class="bg-[#FFFFFF] border border-[#EBE5D8] rounded-[28px] p-6 space-y-4 shadow-sm mt-6">
+        <div class="text-center space-y-1">
+          <p class="text-[10px] tracking-[0.2em] text-[#8C826F] font-serif-kr uppercase">SYNASTRY MATCH</p>
+          <h2 class="font-serif-kr text-base font-bold text-[#1E3E2B]">그 사람과의 궁합 확인하기</h2>
+          <p class="text-[11px] text-[#8C826F]">상대방의 생일을 넣으면 두 사람의 영혼 케미를 확인합니다.</p>
+        </div>
+
+        <div class="space-y-2.5 pt-1">
+          <div>
+            <label class="text-[10px] font-bold text-[#8C826F] ml-1 block mb-1">상대방 생년월일</label>
+            <input type="date" id="partnerBirthDate" value="1992-07-25" class="w-full px-3.5 bg-[#FAF8F3] border border-[#E3DCCF] rounded-2xl text-xs text-[#2D312E] font-semibold focus:outline-none focus:border-[#1E3E2B]">
+          </div>
+          <button onclick="analyzeMatch()" class="w-full h-12 bg-[#8C3A3A] hover:bg-[#732F2F] active:scale-[0.98] text-[#FAF8F3] font-serif-kr font-bold text-xs rounded-xl shadow transition duration-200 flex items-center justify-center">
+            두 사람의 궁합 스코어 열기
+          </button>
+        </div>
+
+        <!-- 궁합 결과 카드 -->
+        <div id="matchResult" class="hidden space-y-3 pt-3 border-t border-[#EBE5D8] animate-fade-in">
+          <div class="flex items-center justify-between p-4 bg-[#FAF5F5] border border-[#EEDCDC] rounded-2xl">
+            <div>
+              <span class="text-[10px] text-[#8C3A3A] font-serif-kr font-bold block">궁합 지수</span>
+              <span class="text-sm font-bold font-serif-kr text-[#2D312E]" id="matchTitle"></span>
+            </div>
+            <div class="text-2xl font-serif-kr font-black text-[#8C3A3A]" id="matchScore"></div>
+          </div>
+
+          <div class="p-3.5 bg-[#FAF8F3] rounded-xl border border-[#EBE5D8] space-y-1">
+            <span class="text-[11px] font-bold text-[#1E3E2B] block">⚡ 서로 끌리는 이유</span>
+            <p class="text-xs text-[#524B3E] leading-relaxed" id="matchAttraction"></p>
+          </div>
+
+          <div class="p-3.5 bg-[#FAF8F3] rounded-xl border border-[#EBE5D8] space-y-1">
+            <span class="text-[11px] font-bold text-[#8C3A3A] block">💣 싸우게 되는 지점 & 처방전</span>
+            <p class="text-xs text-[#524B3E] leading-relaxed" id="matchAdvice"></p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    let chartInstance = null;
+    let currentUserSign = '사자자리';
+
+    const ANIMAL_DB = {
+      '양자리': {
+        animal: '불꽃의 붉은 매', emoji: '🦅', elem: 'fire',
+        quote: '당신은 아무도 가지 않은 길을 가장 먼저 뚫고 나가는 사람이에요.',
+        thai: 'เหยี่ยวเพลิง · Red Hawk',
+        sub: '망설임 없이 먼저 깃발을 꽂는 개척자',
+        ratings: [
+          { name: '직업 및 비즈니스', grade: 'S', comment: '독립 사업, 기획 총괄에서 폭발적 성취' },
+          { name: '재물 및 자산 감각', grade: 'A', comment: '빠른 기회 포착, 충동 소비만 조심' },
+          { name: '대인관계 및 인맥', grade: 'A', comment: '뒤끝 없는 솔직함으로 사람을 모음' },
+          { name: '연애 및 동반자복', grade: 'B+', comment: '밀당 없이 직진하는 화끈한 로맨스' },
+          { name: '건강 및 멘탈에너지', grade: 'B-', comment: '두통 및 수면 부족, 뇌 휴식 필수' }
+        ],
+        descP: '남들이 고민하느라 타이밍을 놓칠 때, 일단 행동으로 옮겨 길을 만들어냅니다. 계산적인 태도를 가장 싫어하며 솔직담백한 사람에게 마음을 엽니다.',
+        descC: '상명하복 조직보다는 전권을 쥐고 흔들 수 있는 자리나 1인 비즈니스에서 능력이 극대화됩니다.',
+        descW: '돈을 버는 야망과 순발력이 뛰어납니다. 번 돈의 40%는 손 못 대는 안전 자산에 묶어둘 때 거부가 됩니다.',
+        descL: '나를 구속하거나 통제하려는 사람은 맞지 않습니다. 내 자유와 야망을 응원해주는 포용력 있는 사람과 천생연분입니다.'
+      },
+      '황소자리': {
+        animal: '호박빛 대지의 곰', emoji: '🐻', elem: 'earth',
+        quote: '당신은 화려하지 않아도, 사람들이 결국 돌아오는 자리예요.',
+        thai: 'หมีอำพัน · Amber Bear',
+        sub: '곁에 있으면 마음이 놓이는 든든한 사람',
+        ratings: [
+          { name: '재물 및 자산 감각', grade: 'S', comment: '12개 별자리 중 재물 그릇 1위' },
+          { name: '직업 및 비즈니스', grade: 'A+', comment: '시간이 갈수록 몸값이 폭등하는 대기만성' },
+          { name: '연애 및 동반자복', grade: 'A', comment: '한번 마음 주면 평생 가는 듬직한 인연' },
+          { name: '대인관계 및 인맥', grade: 'B+', comment: '진짜 내 사람 소수만 챙기는 실속파' },
+          { name: '건강 및 멘탈에너지', grade: 'B', comment: '목/갑상선 주의, 폭식 절제' }
+        ],
+        descP: '말만 앞서는 것을 싫어하며 묵묵히 실속을 챙깁니다. 겉은 순해 보여도 내면의 주관과 뚝심은 그 누구도 꺾지 못합니다.',
+        descC: '장기적인 전문직, 금융, 부동산, 브랜딩 등 시간이 지날수록 가치가 우상향하는 분야에 최적화되어 있습니다.',
+        descW: '가치 있는 물건과 자산을 알아보는 안목이 탁월합니다. 복리 효과를 노려 실물 자산을 모아갈 때 대성합니다.',
+        descL: '감정 기복이 적고 맛있는 밥을 같이 먹으며 신뢰를 나눌 수 있는 듬직한 사람과 가장 안정적인 행복을 누립니다.'
+      },
+      '쌍둥이자리': {
+        animal: '바람을 타는 은빛 여우', emoji: '🦊', elem: 'air',
+        quote: '당신은 굳이 설명하지 않아도, 세상의 흐름을 먼저 읽는 사람이에요.',
+        thai: 'จิ้งจอกเงิน · Silver Fox',
+        sub: '재치와 감각으로 판을 뒤집는 트렌드세터',
+        ratings: [
+          { name: '대인관계 및 인맥', grade: 'S', comment: '스치기만 해도 내 편 만드는 최고의 인맥' },
+          { name: '직업 및 비즈니스', grade: 'A+', comment: '콘텐츠, 기획, IT 멀티태스킹' },
+          { name: '재물 및 자산 감각', grade: 'B+', comment: '다양한 N잡 파이프라인 형성' },
+          { name: '연애 및 동반자복', grade: 'B+', comment: '지적 티키타카가 통하는 친구 같은 연애' },
+          { name: '건강 및 멘탈에너지', grade: 'B-', comment: '생각 과다로 인한 신경성 피로' }
+        ],
+        descP: '호기심이 풍부하고 두뇌 회전이 200%로 돌아갑니다. 어떤 모임에서든 분위기를 주도하며 지루한 틀에 갇히는 것을 싫어합니다.',
+        descC: '마케팅, 플랫폼 기획, 미디어 등 매일 새로운 정보를 가공해 전달하는 분야에서 독보적입니다.',
+        descW: '한 가지 일만 하기보다 다양한 파이프라인에서 돈이 들어옵니다. 흩어진 자금을 하나로 모으는 룰이 필요합니다.',
+        descL: '말귀가 밝고 유머 감각이 뛰어난 사람에게 끌립니다. 함께 성장할 수 있는 친구 같은 파트너가 좋습니다.'
+      },
+      '게자리': {
+        animal: '달빛을 품은 수호 사슴', emoji: '🦌', elem: 'water',
+        quote: '당신은 차가운 세상 속에서 유일한 따뜻한 울타리가 되어주는 사람이에요.',
+        thai: 'กวางแสงจันทร์ · Moonlight Deer',
+        sub: '내 사람을 지키는 다정하고 단단한 수호자',
+        ratings: [
+          { name: '연애 및 동반자복', grade: 'S', comment: '진심을 다 바치는 헌신적인 사랑' },
+          { name: '재물 및 자산 감각', grade: 'A+', comment: '내 집 마련 및 저축 복 최상' },
+          { name: '대인관계 및 인맥', grade: 'A', comment: '내 울타리 안 사람에겐 한없는 포용' },
+          { name: '직업 및 비즈니스', grade: 'A', comment: '사람의 심리를 움직이는 기획과 운영' },
+          { name: '건강 및 멘탈에너지', grade: 'B', comment: '감정 스트레스성 위장 장애 주의' }
+        ],
+        descP: '타인의 감정을 귀신같이 읽어내며 깊은 정을 지녔습니다. 내 사람에게는 아낌없이 베풀지만 선을 넘으면 단호하게 등을 돌립니다.',
+        descC: '상담, 교육, 주거/공간, 커뮤니티, 요식업 등 사람의 온기를 채워주는 비즈니스에서 빛을 발합니다.',
+        descW: '보금자리를 지키려는 본능이 강해 부동산 운이 매우 좋습니다. 위기에도 흔들리지 않는 통장 부자입니다.',
+        descL: '나만 바라봐주고 불안한 마음을 따뜻하게 감싸주는 다정하고 가정적인 사람과 천생연분을 이룹니다.'
+      },
+      '사자자리': {
+        animal: '태양의 황금빛 사자', emoji: '🦁', elem: 'fire',
+        quote: '당신은 빛을 찾으러 가지 않아도, 스스로 빛을 내는 사람이에요.',
+        thai: 'ราชสีห์ทองคำ · Golden Lion',
+        sub: '자신만의 무대에서 세상을 이끄는 사람',
+        ratings: [
+          { name: '직업 및 비즈니스', grade: 'S', comment: '대표, 디렉터, 개인 브랜딩 최강' },
+          { name: '대인관계 및 인맥', grade: 'S', comment: '도량이 넓어 주변에 사람이 따름' },
+          { name: '재물 및 자산 감각', grade: 'A+', comment: '명예와 지위가 오를수록 부가 쏟아짐' },
+          { name: '연애 및 동반자복', grade: 'A', comment: '드라마틱하고 자랑스러운 로맨스' },
+          { name: '건강 및 멘탈에너지', grade: 'B', comment: '심장 및 척추 건강, 과로 방지' }
+        ],
+        descP: '자존감이 높고 당당하며 어디서든 존재감을 드러냅니다. 인정과 칭찬을 받을 때 불가능한 일도 해내는 타고난 리더입니다.',
+        descC: '내 이름 석 자를 걸고 하는 사업, 총괄 디렉터, 엔터테인먼트 등 전면에 나서는 분야에서 대성합니다.',
+        descW: '스케일이 커서 큰돈을 만질 팔자입니다. 남에게 베푸는 품위 유지비만 조절하면 거대한 부를 누립니다.',
+        descL: '어디 데려가도 자랑스러운 센스 있고 멋진 사람에게 끌리며, 나를 존중해주는 파트너에게 헌신합니다.'
+      },
+      '처녀자리': {
+        animal: '새벽 안개의 백조', emoji: '🦢', elem: 'earth',
+        quote: '당신은 아무도 보지 못한 디테일 하나로 모든 것을 완성하는 사람이에요.',
+        thai: 'หงส์หมอกรุ่ง · Mist Swan',
+        sub: '오차 없는 감각으로 질서를 만드는 장인',
+        ratings: [
+          { name: '직업 및 비즈니스', grade: 'S', comment: '데이터, 시스템 최적화의 일인자' },
+          { name: '재물 및 자산 감각', grade: 'A+', comment: '가성비와 분산 투자의 달인' },
+          { name: '연애 및 동반자복', grade: 'B+', comment: '실질적으로 챙겨주는 성숙한 사랑' },
+          { name: '대인관계 및 인맥', grade: 'B+', comment: '예의와 선을 지키는 깔끔한 관계' },
+          { name: '건강 및 멘탈에너지', grade: 'B-', comment: '완벽주의로 인한 소화기 민감' }
+        ],
+        descP: '남들이 지나치는 사소한 구멍을 찾아내 완벽하게 수선합니다. 겉은 조용하지만 머릿속에선 철저한 분석이 돌아갑니다.',
+        descC: '개발, 금융, 데이터, 퀄리티 컨트롤, 컨설팅 등 정밀함과 높은 신뢰도를 요구하는 분야에서 최고의 대우를 받습니다.',
+        descW: '충동구매 없이 철저한 분산 투자로 자산을 우상향시키는 모범적인 재테크 운을 지녔습니다.',
+        descL: '시간 약속을 잘 지키고 자기 관리가 철저하며 배울 점이 있는 사람에게 호감을 느낍니다.'
+      },
+      '천칭자리': {
+        animal: '달콤한 바람의 공작새', emoji: '🦚', elem: 'air',
+        quote: '당신은 거칠게 부딪히지 않고도, 우아하게 원하는 것을 얻는 사람이에요.',
+        thai: 'นกยูงสายลม · Wind Peacock',
+        sub: '조화로운 매너로 사람을 끄는 사교가',
+        ratings: [
+          { name: '연애 및 동반자복', grade: 'S', comment: '센스 있고 매너 넘치는 워너비 파트너' },
+          { name: '대인관계 및 인맥', grade: 'S', comment: '적을 만들지 않는 처세술의 달인' },
+          { name: '직업 및 비즈니스', grade: 'A+', comment: '브랜딩, 디자인, 협상 및 파트너십' },
+          { name: '재물 및 자산 감각', grade: 'A', comment: '안목이 돈이 되는 가치 투자' },
+          { name: '건강 및 멘탈에너지', grade: 'B', comment: '허리 및 신장 관리, 스트레칭 필수' }
+        ],
+        descP: '싸움과 갈등을 싫어하며 뛰어난 심미안과 매너를 갖췄습니다. 우아하고 조화로운 삶의 분위기를 만듭니다.',
+        descC: '디자인, PR, 협상, 럭셔리 브랜딩 등 사람 사이를 잇거나 미적 가치를 극대화하는 일에 최적입니다.',
+        descW: '가치 있는 브랜드, 문화 예술 자산 투자에 눈이 밝습니다. 신속한 결단력을 기르면 부가 커집니다.',
+        descL: '외모와 센스, 배려심을 두루 갖춘 사람과 서로를 존중하며 로맨틱한 파트너십을 완성합니다.'
+      },
+      '전갈자리': {
+        animal: '칠흑 밤의 흑표범', emoji: '🐆', elem: 'water',
+        quote: '당신은 바닥까지 내려가도, 기어코 더 강해져서 돌아오는 사람이에요.',
+        thai: 'เสือดำราตรี · Night Panther',
+        sub: '눈빛 하나로 본질을 꿰뚫는 승부사',
+        ratings: [
+          { name: '재물 및 자산 감각', grade: 'S', comment: '위기 속에서 거대한 부를 낚아챔' },
+          { name: '직업 및 비즈니스', grade: 'S', comment: '투자 금융, 리서치, 위기 극복 최강' },
+          { name: '연애 및 동반자복', grade: 'A+', comment: '영혼까지 결합하는 깊고 진한 사랑' },
+          { name: '대인관계 및 인맥', grade: 'B+', comment: '한번 믿으면 끝까지 가는 깊은 의리' },
+          { name: '건강 및 멘탈에너지', grade: 'B', comment: '독소 배출과 디톡스 운동 필요' }
+        ],
+        descP: '눈빛만 봐도 상대의 거짓을 꿰뚫어 봅니다. 위기가 닥쳤을 때 오히려 차분해지며 판을 뒤집는 승부사입니다.',
+        descC: '투자 펀드, 보안, 심리, 의학, 감사 등 비밀과 핵심을 파헤치는 고난도 전문직에서 최고가 됩니다.',
+        descW: '남들이 공포에 질렸을 때 역발상으로 진입해 큰돈을 거머쥐는 탁월한 투자 감각을 지녔습니다.',
+        descL: '가벼운 만남은 사절하며 모든 비밀을 털어놓을 수 있는 운명적인 소울메이트를 만나 평생 함께합니다.'
+      },
+      '사수자리': {
+        animal: '광야를 달리는 청마', emoji: '🐎', elem: 'fire',
+        quote: '당신은 좁은 울타리에 갇히기엔, 품고 있는 세상이 너무 넓은 사람이에요.',
+        thai: 'ม้าฟ้าทุ่งกว้าง · Blue Stallion',
+        sub: '더 넓은 세상을 향해 도약하는 탐험가',
+        ratings: [
+          { name: '직업 및 비즈니스', grade: 'S', comment: '해외 사업, 교육, 큰 그림 기획' },
+          { name: '대인관계 및 인맥', grade: 'A+', comment: '호탕하고 긍정적인 에너지' },
+          { name: '재물 및 자산 감각', grade: 'A', comment: '스케일이 커서 큰돈을 만짐' },
+          { name: '연애 및 동반자복', grade: 'B+', comment: '자유를 존중하는 쿨하고 지적인 연애' },
+          { name: '건강 및 멘탈에너지', grade: 'B', comment: '간 피로와 하체 부상 주의' }
+        ],
+        descP: '답답한 규율과 꼰대 문화를 싫어합니다. 긍정적이고 통이 크며 넓은 세상에서 지적 성장을 이룰 때 빛납니다.',
+        descC: '글로벌 무역, 학문, 출판, 여행 등 공간적 제약이 없는 분야에서 큰 비전을 제시하는 리더입니다.',
+        descW: '스케일이 커서 억 단위로 시원하게 법니다. 돈을 묶어둘 든든한 금고지기를 곁에 두면 큰 부를 이룹니다.',
+        descL: '나를 구속하지 않고 함께 세계를 여행하며 미래를 논할 수 있는 똑똑하고 유쾌한 사람을 만납니다.'
+      },
+      '염소자리': {
+        animal: '눈 덮인 산의 흑염소', emoji: '🐐', elem: 'earth',
+        quote: '당신은 가장 험한 길을 골라 걸어도, 결국 정상에 서서 내려다볼 사람이에요.',
+        thai: 'แพะภูเขาหิมะ · Snow Mountain Capra',
+        sub: '묵묵한 뚝심으로 정상을 차지하는 제왕',
+        ratings: [
+          { name: '직업 및 비즈니스', grade: 'S', comment: 'CEO, 사업가, 장기 프로젝트 총괄' },
+          { name: '재물 및 자산 감각', grade: 'S', comment: '나이 들수록 불어나는 대기만성 부' },
+          { name: '대인관계 및 인맥', grade: 'A', comment: '평판과 신뢰를 중시하는 단단함' },
+          { name: '연애 및 동반자복', grade: 'B+', comment: '평생을 책임지는 듬직한 배우자' },
+          { name: '건강 및 멘탈에너지', grade: 'B-', comment: '워커홀릭 과로, 관절 건강 주의' }
+        ],
+        descP: '요행을 바라지 않고 실력을 쌓아 기어코 정상에 오릅니다. 나이가 들수록 더 멋있어지는 대기만성형입니다.',
+        descC: '조직의 정점, 사업체 대표, 대형 프로젝트 총괄 등 룰을 만들고 통제하는 위치에서 성공합니다.',
+        descW: '젊은 시절부터 탄탄하게 기초를 다져 중년 이후 무너지지 않는 자산 제국을 세웁니다.',
+        descL: '조건 없는 설렘보다 현실적인 미래를 함께 그릴 수 있는 지혜롭고 성실한 배우자를 만납니다.'
+      },
+      '물병자리': {
+        animal: '별빛을 낚는 은빛 올빼미', emoji: '🦉', elem: 'air',
+        quote: '당신은 남들이 보지 못하는 미래를, 이미 혼자 살아가고 있는 사람이에요.',
+        thai: 'นกฮูกดวงดาว · Starlight Owl',
+        sub: '시대의 틀을 깨는 독창적인 혁신가',
+        ratings: [
+          { name: '직업 및 비즈니스', grade: 'S', comment: 'IT, AI, 신기술 플랫폼, 프리랜서' },
+          { name: '재물 및 자산 감각', grade: 'A', comment: '초기 신시장 선점 대박 감각' },
+          { name: '대인관계 및 인맥', grade: 'A+', comment: '편견 없이 누구와도 통하는 열린 마인드' },
+          { name: '연애 및 동반자복', grade: 'B+', comment: '소울메이트 같은 지적 교감' },
+          { name: '건강 및 멘탈에너지', grade: 'B', comment: '혈액순환과 신경계 휴식 필요' }
+        ],
+        descP: '틀에 박힌 상식을 거부하며 번뜩이는 아이디어로 판을 뒤집습니다. 인도주의적이면서도 쿨한 개인주의자입니다.',
+        descC: 'AI, 소프트웨어, 웹 플랫폼 등 미래 신산업에서 내 아이디어를 실현할 때 큰 성공을 거둡니다.',
+        descW: '남들이 아직 모르는 신시장의 극초기에 진입해 시세 차익을 거두는 독특한 재물 감각이 있습니다.',
+        descL: '친구처럼 편하면서도 영혼의 대화가 통하고 서로의 독특함을 100% 인정해주는 사람과 잘 맞습니다.'
+      },
+      '물고기자리': {
+        animal: '깊은 바다의 푸른 고래', emoji: '🐋', elem: 'water',
+        quote: '당신은 세상의 날카로운 모서리를, 따뜻한 온기로 둥글게 감싸주는 사람이에요.',
+        thai: 'วาฬสีน้ำเงินลึก · Deep Ocean Whale',
+        sub: '마음을 어루만지는 힐링 아티스트',
+        ratings: [
+          { name: '연애 및 동반자복', grade: 'S', comment: '순애보를 바치는 최고의 로맨티스트' },
+          { name: '직업 및 비즈니스', grade: 'A+', comment: '예술, 영상, 심리, 사람 살리는 일' },
+          { name: '대인관계 및 인맥', grade: 'A', comment: '지친 이들의 쉼터가 되어주는 포용력' },
+          { name: '재물 및 자산 감각', grade: 'B+', comment: '직관적 복, 명확한 계약서 필수' },
+          { name: '건강 및 멘탈에너지', grade: 'B-', comment: '면역력 관리, 기 빨림 주의' }
+        ],
+        descP: '풍부한 영감과 공감력으로 사람들의 아픔을 어루만집니다. 세상에 따뜻한 감동을 주는 힐러입니다.',
+        descC: '음악, 영상, 문학, 심리치료 등 사람의 마음을 건드리는 분야에서 두터운 팬덤을 형성합니다.',
+        descW: '돈에 집착하기보다 가치에 집중할 때 돈이 저절로 따릅니다. 체계적인 계약 관리가 중요합니다.',
+        descL: '나를 따뜻하게 안아주고 든든하게 지켜줄 수 있는 바위 같은 사람을 만나면 행복을 누립니다.'
+      }
+    };
+
+    function analyzeChart() {
+      const birthDate = document.getElementById('birthDate').value;
+      const birthTime = document.getElementById('birthTime').value;
+
+      if (!birthDate) {
+        alert('생년월일을 입력해주세요.');
+        return;
+      }
+
+      document.getElementById('loading').classList.remove('hidden');
+      document.getElementById('resultArea').classList.add('hidden');
+
+      setTimeout(() => {
+        const d = new Date(birthDate);
+        const year = d.getFullYear();
+        const month = d.getMonth() + 1;
+        const day = d.getDate();
+        const [hours] = (birthTime || '12:00').split(':').map(Number);
+
+        const sunName = getSunSignName(month, day);
+        currentUserSign = sunName;
+        const info = ANIMAL_DB[sunName];
+
+        document.getElementById('animalEmoji').innerText = info.emoji;
+        document.getElementById('animalName').innerText = info.animal;
+        document.getElementById('animalSubtitle').innerText = info.sub;
+        document.getElementById('destinyCode').innerText = `DESTINY CODE · ${sunName.toUpperCase()} · ${year}`;
+
+        document.getElementById('coreQuote').innerText = info.quote;
+        document.getElementById('thaiSubtitle').innerText = info.thai;
+
+        document.getElementById('descPersonality').innerText = info.descP;
+        document.getElementById('descCareer').innerText = info.descC;
+        document.getElementById('descWealth').innerText = info.descW;
+        document.getElementById('descLove').innerText = info.descL;
+
+        renderRatings(info.ratings);
+        renderLifeChart(year, month, day, hours, info.elem);
+
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('resultArea').classList.remove('hidden');
+        document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth' });
+      }, 350);
+    }
+
+    function renderRatings(ratings) {
+      const container = document.getElementById('ratingsContainer');
+      container.innerHTML = ratings.map(r => `
+        <div class="p-3 bg-[#FAF8F3] border border-[#EBE5D8] rounded-xl flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-[#1E3E2B] font-serif-kr">${r.name}</div>
+            <div class="text-[11px] text-[#7A7261] mt-0.5">${r.comment}</div>
+          </div>
+          <span class="text-sm font-black font-serif-kr text-[#1E3E2B] bg-[#EBF3ED] border border-[#D5E4D8] px-2.5 py-1 rounded-lg">
+            ${r.grade}
+          </span>
+        </div>
+      `).join('');
+    }
+
+    function renderLifeChart(y, m, d, h, elem) {
+      const ctx = document.getElementById('lifeChart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      const seed = (y * 7 + m * 13 + d * 17 + h * 3) % 4;
+      let tagText = '미드라이프 피크형';
+      let dataPoints = [];
+
+      if (seed === 0) {
+        tagText = '쌍봉형 도약 곡선';
+        dataPoints = [
+          { age: 0, score: 75, note: '재능 조기 발견' },
+          { age: 26, score: 94, note: '1차 조기 전성기' },
+          { age: 35, score: 65, note: '진로 구조조정' },
+          { age: 56, score: 96, note: '2차 대성취 (사회적 명예)' },
+          { age: 100, score: 86, note: '명예로운 계승' }
+        ];
+      } else if (seed === 1) {
+        tagText = '대기만성 뚝심 곡선';
+        dataPoints = [
+          { age: 0, score: 60, note: '단련과 탐색기' },
+          { age: 29, score: 55, note: '현실 점검' },
+          { age: 48, score: 92, note: '거대한 수확기' },
+          { age: 62, score: 98, note: '최대 자산 달성' },
+          { age: 100, score: 88, note: '평온한 완성' }
+        ];
+      } else if (seed === 2) {
+        tagText = '3040 황금기 곡선';
+        dataPoints = [
+          { age: 0, score: 70, note: '평온한 유년' },
+          { age: 28, score: 58, note: '방황 극복' },
+          { age: 41, score: 97, note: '인생 최고 전성기' },
+          { age: 65, score: 85, note: '지혜의 여유' },
+          { age: 100, score: 85, note: '완성된 일생' }
+        ];
+      } else {
+        tagText = '역전 파동형 곡선';
+        dataPoints = [
+          { age: 0, score: 68, note: '도전의 청년기' },
+          { age: 30, score: 52, note: '인생 전환점' },
+          { age: 42, score: 93, note: '위기를 기회로 바꾼 반전' },
+          { age: 68, score: 95, note: '노년의 거대한 성공' },
+          { age: 100, score: 85, note: '아름다운 유산' }
+        ];
+      }
+
+      document.getElementById('curveTag').innerText = tagText;
+
+      const gradient = ctx.createLinearGradient(0, 0, 0, 180);
+      gradient.addColorStop(0, 'rgba(30, 62, 43, 0.25)');
+      gradient.addColorStop(1, 'rgba(30, 62, 43, 0.0)');
+
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: dataPoints.map(p => `${p.age}세`),
+          datasets: [{
+            data: dataPoints.map(p => p.score),
+            borderColor: '#1E3E2B',
+            backgroundColor: gradient,
+            borderWidth: 2.5,
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: '#C8A97E',
+            pointBorderColor: '#1E3E2B',
+            pointRadius: 4,
+            pointHoverRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { min: 40, max: 100, grid: { color: '#EBE5D8' }, ticks: { color: '#8C826F', font: { size: 9 } } },
+            x: { grid: { color: '#EBE5D8' }, ticks: { color: '#8C826F', font: { size: 9 } } }
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#1E3E2B',
+              titleFont: { family: 'Noto Serif KR' },
+              callbacks: {
+                label: function(ctx) {
+                  return ` ${dataPoints[ctx.dataIndex].score}점 : ${dataPoints[ctx.dataIndex].note}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function analyzeMatch() {
+      const partnerDate = document.getElementById('partnerBirthDate').value;
+      if (!partnerDate) {
+        alert('상대방 생년월일을 입력해주세요.');
+        return;
+      }
+
+      const d = new Date(partnerDate);
+      const partnerSign = getSunSignName(d.getMonth() + 1, d.getDate());
+
+      const myElem = ANIMAL_DB[currentUserSign].elem;
+      const partnerElem = ANIMAL_DB[partnerSign].elem;
+
+      let score = 88;
+      let title = `나(${ANIMAL_DB[currentUserSign].animal}) ❤️ 상대방(${ANIMAL_DB[partnerSign].animal})`;
+      let attraction = '';
+      let advice = '';
+
+      if (myElem === partnerElem) {
+        score = 95;
+        attraction = `같은 원소를 타고나서 말하지 않아도 눈빛만으로 서로의 생각과 감정 템포를 100% 이해합니다.`;
+        advice = `둘 다 고집이 셀 수 있으니 자존심 싸움만 피하고 30분 뒤 맛있는 식사로 유머러스하게 풀어내세요.`;
+      } else if ((myElem === 'fire' && partnerElem === 'air') || (myElem === 'air' && partnerElem === 'fire')) {
+        score = 98;
+        attraction = `불과 바람의 만남으로 서로에게 끊임없는 아이디어와 열정을 불어넣어 주는 천생연분 조합입니다.`;
+        advice = `서로의 독립적인 공간과 자유를 존중해주면 평생 가장 든든한 지원군이자 최고의 연인이 됩니다.`;
+      } else if ((myElem === 'earth' && partnerElem === 'water') || (myElem === 'water' && partnerElem === 'earth')) {
+        score = 96;
+        attraction = `대지에 단비가 내리듯 현실적인 안정감과 따뜻한 감성이 결합해 서로를 가장 편안하게 힐링해 줍니다.`;
+        advice = `해결책을 바로 주기 전에 "오늘 정말 고생 많았어"라는 공감의 한마디를 먼저 건네주세요.`;
+      } else {
+        score = 80;
+        attraction = `완전히 다른 매력에 강하게 끌리며, 내가 가지지 못한 시야와 장점을 채워줄 수 있는 자석 궁합입니다.`;
+        advice = `"나와 다르다"는 것을 틀린 것으로 보지 말고 열린 마음으로 대화하면 둘도 없는 인생 파트너가 됩니다.`;
+      }
+
+      document.getElementById('matchTitle').innerText = title;
+      document.getElementById('matchScore').innerText = `${score}점`;
+      document.getElementById('matchAttraction').innerText = attraction;
+      document.getElementById('matchAdvice').innerText = advice;
+
+      document.getElementById('matchResult').classList.remove('hidden');
+    }
+
+    function getSunSignName(m, d) {
+      if ((m == 3 && d >= 21) || (m == 4 && d <= 19)) return '양자리';
+      if ((m == 4 && d >= 20) || (m == 5 && d <= 20)) return '황소자리';
+      if ((m == 5 && d >= 21) || (m == 6 && d <= 21)) return '쌍둥이자리';
+      if ((m == 6 && d >= 22) || (m == 7 && d <= 22)) return '게자리';
+      if ((m == 7 && d >= 23) || (m == 8 && d <= 22)) return '사자자리';
+      if ((m == 8 && d >= 23) || (m == 9 && d <= 22)) return '처녀자리';
+      if ((m == 9 && d >= 23) || (m == 10 && d <= 22)) return '천칭자리';
+      if ((m == 10 && d >= 23) || (m == 11 && d <= 22)) return '전갈자리';
+      if ((m == 11 && d >= 23) || (m == 12 && d <= 21)) return '사수자리';
+      if ((m == 12 && d >= 22) || (m == 1 && d <= 19)) return '염소자리';
+      if ((m == 1 && d >= 20) || (m == 2 && d <= 18)) return '물병자리';
+      return '물고기자리';
+    }
+
+    function shareResult() {
+      if (navigator.share) {
+        navigator.share({
+          title: '내 영혼의 수호 동물과 라이프 차트',
+          text: `내 결과는 [${document.getElementById('animalName').innerText}] 입니다!`,
+          url: window.location.href,
+        });
+      } else {
+        alert('결과 페이지 주소가 복사되었습니다.');
+      }
+    }
+  </script>
+</body>
+</html>
